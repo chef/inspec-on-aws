@@ -12,7 +12,7 @@ variable "aws_amis" {
   default = {
     # This variable is used later for the lookup based on the region value. This is useful if you want to build things in different regions. This pattern was in the already existing examples.
     # Chef Essentials 7.0.0
-    us-east-1 = "ami-d5d7ffae"
+    us-east-1 = "ami-97785bed"
   }
 }
 
@@ -115,18 +115,6 @@ resource "aws_instance" "webserver" {
   tags {
     Name = "webserver"
   }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo yum -y install nginx && sudo service nginx start",
-      "sudo yum -y install mysql"
-    ]
-
-    connection {
-      user = "chef"
-      password = "Cod3Can!"
-    }
-  }
 }
 
 
@@ -138,21 +126,6 @@ resource "aws_instance" "database" {
   availability_zone = "${var.aws_availability_zone}"
   tags {
     Name = "database"
-  }
-
-  # The command to grant the remote access these hard coded CIDR range.
-  # I would need to change it to use the defined subnet range but convert to
-  # this format: 10.0.1.%
-  provisioner "remote-exec" {
-    inline = [
-      "sudo yum -y install mysql-server && sudo service mysqld start",
-      "mysql -u root -e 'GRANT ALL ON *.* TO \"root\"@\"10.0.1.%\"'"
-    ]
-
-    connection {
-      user = "chef"
-      password = "Cod3Can!"
-    }
   }
 }
 
@@ -180,10 +153,6 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "private" {
   vpc_id                  = "${aws_vpc.default.id}"
   cidr_block              = "10.0.100.0/24"
-  # Ideally this would be a private ip address but I cannot install
-  # software on it and configure it.
-  # To fix that
-  map_public_ip_on_launch = true
   availability_zone = "${var.aws_availability_zone}"
 }
 
