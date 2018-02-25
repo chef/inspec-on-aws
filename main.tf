@@ -97,7 +97,7 @@ output "security_group.ssh.id" {
 }
 
 output "route.internet_access.id" {
-  value = "${aws_route.internet_access.id}"
+  value = "${aws_route.internet_access.route_table_id}"
 }
 
 #
@@ -128,6 +128,8 @@ resource "aws_instance" "database" {
     Name = "database"
   }
 }
+
+# networking
 
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
@@ -205,7 +207,7 @@ resource "aws_security_group" "mysql" {
   description = "Used in a terraform exercise"
   vpc_id      = "${aws_vpc.default.id}"
 
-  # Allow inbound HTTP connection from all
+  # Allow inbound TCP connection for MySql from instances from the public subnet
   ingress {
     from_port   = 3306
     to_port     = 3306
@@ -213,6 +215,7 @@ resource "aws_security_group" "mysql" {
     cidr_blocks = ["10.0.1.0/24"]
   }
 
+  # Allow inbound TCP connection for MySql from instances from the private subnet
   ingress {
     from_port   = 3306
     to_port     = 3306
