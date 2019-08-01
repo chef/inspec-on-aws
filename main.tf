@@ -2,8 +2,11 @@
 # Variables
 #
 
-variable "aws_access_key" {}
-variable "aws_secret_key" {}
+variable "aws_access_key" {
+}
+
+variable "aws_secret_key" {
+}
 
 variable "aws_region" {
   default = "us-east-1"
@@ -18,9 +21,9 @@ variable "aws_availability_zone" {
 #
 
 provider "aws" {
-  access_key = "${var.aws_access_key}"
-  secret_key = "${var.aws_secret_key}"
-  region     = "${var.aws_region}"
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
+  region     = var.aws_region
 }
 
 #
@@ -55,24 +58,24 @@ resource "aws_vpc" "default" {
 }
 
 resource "aws_internet_gateway" "default" {
-  vpc_id = "${aws_vpc.default.id}"
+  vpc_id = aws_vpc.default.id
 }
 
 resource "aws_route" "internet_access" {
-  route_table_id         = "${aws_vpc.default.main_route_table_id}"
+  route_table_id         = aws_vpc.default.main_route_table_id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = "${aws_internet_gateway.default.id}"
+  gateway_id             = aws_internet_gateway.default.id
 }
 
 resource "aws_subnet" "public" {
-  vpc_id                  = "${aws_vpc.default.id}"
+  vpc_id                  = aws_vpc.default.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "${var.aws_region}${var.aws_availability_zone}"
 }
 
 resource "aws_subnet" "private" {
-  vpc_id            = "${aws_vpc.default.id}"
+  vpc_id            = aws_vpc.default.id
   cidr_block        = "10.0.100.0/24"
   availability_zone = "${var.aws_region}${var.aws_availability_zone}"
 }
@@ -80,7 +83,7 @@ resource "aws_subnet" "private" {
 resource "aws_security_group" "ssh" {
   name        = "learn_chef_ssh"
   description = "Used in a terraform exercise"
-  vpc_id      = "${aws_vpc.default.id}"
+  vpc_id      = aws_vpc.default.id
 
   # SSH access from anywhere
   ingress {
@@ -102,7 +105,7 @@ resource "aws_security_group" "ssh" {
 resource "aws_security_group" "web" {
   name        = "learn_chef_web"
   description = "Used in a terraform exercise"
-  vpc_id      = "${aws_vpc.default.id}"
+  vpc_id      = aws_vpc.default.id
 
   # Allow inbound HTTP connection from all
   ingress {
@@ -124,7 +127,7 @@ resource "aws_security_group" "web" {
 resource "aws_security_group" "mysql" {
   name        = "learn_chef_mysql"
   description = "Used in a terraform exercise"
-  vpc_id      = "${aws_vpc.default.id}"
+  vpc_id      = aws_vpc.default.id
 
   # Allow inbound TCP connection for MySql from instances from the public subnet
   ingress {
@@ -154,25 +157,25 @@ resource "aws_security_group" "mysql" {
 # instances
 
 resource "aws_instance" "webserver" {
-  ami                    = "${data.aws_ami.ubuntu.id}"
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
   availability_zone      = "${var.aws_region}${var.aws_availability_zone}"
-  vpc_security_group_ids = ["${aws_security_group.ssh.id}", "${aws_security_group.web.id}"]
-  subnet_id              = "${aws_subnet.public.id}"
+  vpc_security_group_ids = [aws_security_group.ssh.id, aws_security_group.web.id]
+  subnet_id              = aws_subnet.public.id
 
-  tags {
+  tags = {
     Name = "webserver"
   }
 }
 
 resource "aws_instance" "database" {
-  ami                    = "${data.aws_ami.ubuntu.id}"
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
   availability_zone      = "${var.aws_region}${var.aws_availability_zone}"
-  vpc_security_group_ids = ["${aws_security_group.ssh.id}", "${aws_security_group.mysql.id}"]
-  subnet_id              = "${aws_subnet.private.id}"
+  vpc_security_group_ids = [aws_security_group.ssh.id, aws_security_group.mysql.id]
+  subnet_id              = aws_subnet.private.id
 
-  tags {
+  tags = {
     Name = "database"
   }
 }
@@ -184,79 +187,80 @@ resource "aws_instance" "database" {
 # AMI ID
 
 output "image_id" {
-  value = "${data.aws_ami.ubuntu.id}"
+  value = data.aws_ami.ubuntu.id
 }
 
 # webserver details
 
-output "ec2_instance.webserver.name" {
-  value = "${aws_instance.webserver.tags.Name}"
+output "ec2_instance_webserver_name" {
+  value = aws_instance.webserver.tags.Name
 }
 
-output "ec2_instance.webserver" {
-  value = "${aws_instance.webserver.id}"
+output "ec2_instance_webserver" {
+  value = aws_instance.webserver.id
 }
 
-output "ec2_instance.webserver.ami" {
-  value = "${aws_instance.webserver.ami}"
+output "ec2_instance_webserver_ami" {
+  value = aws_instance.webserver.ami
 }
 
-output "ec2_instance.webserver.instance_type" {
-  value = "${aws_instance.webserver.instance_type}"
+output "ec2_instance_webserver_instance_type" {
+  value = aws_instance.webserver.instance_type
 }
 
-output "ec2_instance.webserver.public_ip" {
-  value = "${aws_instance.webserver.public_ip}"
+output "ec2_instance_webserver_public_ip" {
+  value = aws_instance.webserver.public_ip
 }
 
 # database details
 
-output "ec2_instance.database.name" {
-  value = "${aws_instance.database.tags.Name}"
+output "ec2_instance_database_name" {
+  value = aws_instance.database.tags.Name
 }
 
-output "ec2_instance.database" {
-  value = "${aws_instance.database.id}"
+output "ec2_instance_database" {
+  value = aws_instance.database.id
 }
 
-output "ec2_instance.database.ami" {
-  value = "${aws_instance.database.ami}"
+output "ec2_instance_database_ami" {
+  value = aws_instance.database.ami
 }
 
-output "ec2_instance.database.instance_type" {
-  value = "${aws_instance.database.instance_type}"
+output "ec2_instance_database_instance_type" {
+  value = aws_instance.database.instance_type
 }
 
-output "ec2_instance.database.private_ip" {
-  value = "${aws_instance.database.private_ip}"
+output "ec2_instance_database_private_ip" {
+  value = aws_instance.database.private_ip
 }
 
 # networking details
 
-output "vpc.id" {
-  value = "${aws_vpc.default.id}"
+output "vpc_id" {
+  value = aws_vpc.default.id
 }
 
-output "subnet.public.id" {
-  value = "${aws_subnet.public.id}"
+output "subnet_public_id" {
+  value = aws_subnet.public.id
 }
 
-output "subnet.private.id" {
-  value = "${aws_subnet.private.id}"
+output "subnet_private_id" {
+  value = aws_subnet.private.id
 }
 
-output "security_group.web.id" {
-  value = "${aws_security_group.web.id}"
+output "security_group_web_id" {
+  value = aws_security_group.web.id
 }
 
-output "security_group.mysql.id" {
-  value = "${aws_security_group.mysql.id}"
+output "security_group_mysql_id" {
+  value = aws_security_group.mysql.id
 }
 
-output "security_group.ssh.id" {
-  value = "${aws_security_group.ssh.id}"
+output "security_group_ssh_id" {
+  value = aws_security_group.ssh.id
 }
 
-output "route.internet_access.id" {
-  value = "${aws_route.internet_access.route_table_id}"
+output "route_internet_access_id" {
+  value = aws_route.internet_access.route_table_id
 }
+
